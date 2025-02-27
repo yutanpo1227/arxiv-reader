@@ -1,0 +1,26 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Paper {
+  id            String   @id @default(cuid())
+  arxivId       String   @unique
+  title         String
+  titleJa       String
+  abstract      String
+  abstractJa    String
+  authors       String[]
+  publishedAt   DateTime
+  pdfUrl        String
+  categories    String[]
+  journalRef    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  favorite      Boolean @default(false)
+  memo          String?
+} 
