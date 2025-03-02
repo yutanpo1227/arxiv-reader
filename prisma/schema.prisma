@@ -11,9 +11,9 @@ model Paper {
   id            String   @id @default(cuid())
   arxivId       String   @unique
   title         String
-  titleJa       String
+  titleJa       String?
   abstract      String
-  abstractJa    String
+  abstractJa    String?
   authors       String[]
   publishedAt   DateTime
   pdfUrl        String
@@ -23,4 +23,5 @@ model Paper {
   updatedAt     DateTime @updatedAt
   favorite      Boolean @default(false)
   memo          String?
+  isRead        Boolean @default(false)
 } 
