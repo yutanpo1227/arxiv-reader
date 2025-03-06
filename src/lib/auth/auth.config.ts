@@ -2,6 +2,9 @@ import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 
 const authConfig: NextAuthConfig = {
+    pages: {
+        signIn: "/signin",
+    },
     providers: [Google],
     callbacks: {
         async session({ session, user }) {
