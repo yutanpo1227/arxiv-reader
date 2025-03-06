@@ -8,6 +8,25 @@ import { subDays, startOfDay, endOfDay } from 'date-fns'
 const parseXmlString = promisify(parseString)
 const prisma = new PrismaClient()
 
+function safeGetJournalRef(entry: any): string | null {
+  try {
+    const ref = entry['arxiv:journal_ref']
+    
+    if (!ref || ref.length === 0) {
+      return null
+    }
+    
+    if (typeof ref[0] === 'string') {
+      return ref[0]
+    }
+    
+    console.log('Journal ref is not a string:', JSON.stringify(ref))
+    return null
+  } catch (error) {
+    console.error('Error extracting journal ref:', error)
+    return null
+  }
+}
 
 interface ArxivResponse {
   feed: {
@@ -79,7 +98,7 @@ export async function GET(req: Request) {
         pdfUrl: entry.id[0].replace('abs', 'pdf'),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         categories: entry.category.map((cat: any) => cat.$.term),
-        journalRef: entry['arxiv:journal_ref']?.[0] || ""
+        journalRef: safeGetJournalRef(entry)
       })
     }
 
