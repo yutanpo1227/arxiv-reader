@@ -73,9 +73,11 @@ export async function GET(req: Request) {
         titleJa: '',
         abstract: entry.summary[0],
         abstractJa: '',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         authors: entry.author.map((author: any) => author.name[0]),
         publishedAt: new Date(entry.published[0]),
         pdfUrl: entry.id[0].replace('abs', 'pdf'),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         categories: entry.category.map((cat: any) => cat.$.term),
         journalRef: entry['arxiv:journal_ref']?.[0] || null
       })

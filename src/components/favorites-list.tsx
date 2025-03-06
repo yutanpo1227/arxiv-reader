@@ -26,7 +26,7 @@ export default function FavoritesList({
         .map((paper) =>
           paper.id === paperId ? { ...paper, ...updates } : paper
         )
-        .filter((paper) => {
+        .filter(() => {
           if ("favorite" in updates) {
             return updates.favorite !== false;
           }

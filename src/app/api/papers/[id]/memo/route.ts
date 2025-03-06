@@ -15,6 +15,7 @@ export async function PATCH(
     })
     return NextResponse.json(paper)
   } catch (error) {
+    console.error(error)
     return NextResponse.json(
       { error: 'Failed to update memo' },
       { status: 500 }
