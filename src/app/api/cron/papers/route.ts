@@ -6,7 +6,18 @@ import { PrismaClient } from '@prisma/client'
 import { subDays, startOfDay, endOfDay } from 'date-fns'
 
 const parseXmlString = promisify(parseString)
-const prisma = new PrismaClient()
+
+// PrismaClientをグローバルにシングルトンとして管理
+// これにより準備済みステートメントの重複を防ぐ
+const globalForPrisma = global as unknown as { prisma: PrismaClient }
+
+export const prisma =
+  globalForPrisma.prisma ||
+  new PrismaClient({
+    log: ['query', 'error', 'warn'],
+  })
+
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeGetJournalRef(entry: any): string | null {
@@ -104,18 +115,22 @@ export async function GET(req: Request) {
     }
 
     try {
-      await prisma.$transaction(
-        papersToCreate.map(paper => 
-          prisma.paper.create({
+      // トランザクションを分割して実行
+      for (const paper of papersToCreate) {
+        try {
+          await prisma.paper.create({
             data: paper
-          })
-        )
-      )
+          });
+        } catch (e) {
+          console.error(`Error creating paper: ${paper.arxivId}`, e);
+          // 個別のエラーはスキップして続行
+        }
+      }
 
       return NextResponse.json({
         success: true,
         message: `Processed ${papersToCreate.length} papers`
-      })
+      });
     } catch (error) {
       console.error('Database transaction error:', error)
       return NextResponse.json({ 
