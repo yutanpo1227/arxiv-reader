@@ -1,23 +1,39 @@
-import type { NextAuthConfig } from "next-auth";
+import { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 
-const authConfig: NextAuthConfig = {
-    pages: {
-        signIn: "/signin",
+export const authConfig = {
+  pages: {
+    signIn: "/signin",
+  },
+  providers: [
+    Google,
+  ],
+  callbacks: {
+    authorized({ auth, request: { nextUrl } }) {
+      const isLoggedIn = !!auth?.user;
+      const isOnDashboard = nextUrl.pathname === '/';
+      
+      if (isOnDashboard) {
+        if (isLoggedIn) return true;
+        return false;
+      }
+      
+      return true;
     },
-    providers: [Google],
-    callbacks: {
-        async session({ session, user }) {
-            session.user.id = user.id;
-            return session;
-        },
-        async signIn({ user }) {
-            if (user.email !== process.env.MY_EMAIL) {
-                return false;
-            }
-            return true;
-        },
+    async signIn({ user }) {
+      return user.email === process.env.MY_EMAIL;
     },
-};
-
-export default authConfig;
+    async session({ session, token }) {
+      if (session?.user) {
+        session.user.id = token.sub as string;
+      }
+      return session;
+    },
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+  },
+} satisfies NextAuthConfig;

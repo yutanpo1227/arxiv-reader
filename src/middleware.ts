@@ -1,40 +1,29 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import { auth } from "@/lib/auth/auth";
+import { NextResponse } from "next/server";
 
-const publicRoutes = ['/signin', '/api/auth']
+export default auth((req) => {
+  const { nextUrl } = req;
+  const isLoggedIn = !!req.auth;
 
-export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
-  
-  if (
-    pathname.startsWith('/_next') || 
-    pathname.includes('/api/') ||
-    pathname.startsWith('/favicon.ico')
-  ) {
-    return NextResponse.next()
+  const isPublicRoute = ['/signin', '/api'].some(path => 
+    nextUrl.pathname.startsWith(path)
+  );
+
+  if (nextUrl.pathname.match(/\.(ico|jpg|jpeg|png|gif|svg)$/)) {
+    return NextResponse.next();
   }
 
-  const token = await getToken({ 
-    req: request,
-    secret: process.env.AUTH_SECRET
-  })
-  if (!token && !isPublicRoute) {
-    const url = new URL('/signin', request.url)
-    return NextResponse.redirect(url)
+  if (!isLoggedIn && !isPublicRoute) {
+    return Response.redirect(new URL('/signin', nextUrl));
   }
-  
-  if (token && pathname === '/signin') {
-    return NextResponse.redirect(new URL('/', request.url))
+
+  if (isLoggedIn && nextUrl.pathname === '/signin') {
+    return Response.redirect(new URL('/', nextUrl));
   }
-  
-  return NextResponse.next()
-}
+
+  return NextResponse.next();
+});
 
 export const config = {
-  matcher: [
-    '/((?!api/|_next/|_static/|_vercel|[\\w-]+\\.\\w+).*)',
-  ],
-} 
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+};
