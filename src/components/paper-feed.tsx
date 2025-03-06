@@ -111,7 +111,7 @@ export default function PaperFeed() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-50 dark:bg-zinc-900">
+      <div className="flex w-full items-center justify-center min-h-screen bg-zinc-50 dark:bg-zinc-900">
         <div className="animate-spin rounded-full h-8 w-8 border-2 border-zinc-300 dark:border-zinc-600 border-t-zinc-900 dark:border-t-zinc-200"></div>
       </div>
     )
@@ -119,7 +119,7 @@ export default function PaperFeed() {
 
   if (papers.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-50 dark:bg-zinc-900">
+      <div className="w-full flex items-center justify-center min-h-screen bg-zinc-50 dark:bg-zinc-900">
         <p className="text-xl text-zinc-900 dark:text-zinc-100">論文が見つかりませんでした。</p>
       </div>
     )
