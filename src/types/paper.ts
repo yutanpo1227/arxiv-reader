@@ -9,7 +9,6 @@ export interface Paper {
     publishedAt: Date
     pdfUrl: string
     categories: string[]
-    journalRef?: string | null
     createdAt: Date
     updatedAt: Date
     favorite: boolean

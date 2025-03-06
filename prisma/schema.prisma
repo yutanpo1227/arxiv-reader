@@ -18,10 +18,9 @@ model Paper {
   publishedAt   DateTime
   pdfUrl        String
   categories    String[]
-  journalRef    String?
+  favorite      Boolean @default(false)
+  isRead        Boolean @default(false)
+  memo          String   @default("")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  favorite      Boolean @default(false)
-  memo          String?
-  isRead        Boolean @default(false)
 } 
