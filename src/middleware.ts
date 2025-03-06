@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
   
   if (!token && !isPublicRoute) {
     const url = new URL('/signin', request.url)
-    //url.searchParams.set('callbackUrl', encodeURI(request.url))
+    url.searchParams.set('callbackUrl', encodeURI(process.env.NEXT_PUBLIC_APP_URL!))
     return NextResponse.redirect(url)
   }
   
