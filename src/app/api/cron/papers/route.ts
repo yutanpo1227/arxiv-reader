@@ -2,22 +2,10 @@ import { NextResponse } from 'next/server'
 import axios from 'axios'
 import { parseString } from 'xml2js'
 import { promisify } from 'util'
-import { PrismaClient } from '@prisma/client'
 import { subDays, startOfDay, endOfDay } from 'date-fns'
+import { prisma } from '@/lib/prisma'
 
 const parseXmlString = promisify(parseString)
-
-// PrismaClientをグローバルにシングルトンとして管理
-// これにより準備済みステートメントの重複を防ぐ
-const globalForPrisma = global as unknown as { prisma: PrismaClient }
-
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    log: ['query', 'error', 'warn'],
-  })
-
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeGetJournalRef(entry: any): string | null {
