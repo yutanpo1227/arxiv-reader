@@ -5,6 +5,7 @@ import { promisify } from 'util'
 import { subDays, startOfDay, endOfDay } from 'date-fns'
 import { prisma } from '@/lib/prisma'
 
+export const maxDuration = 60
 const parseXmlString = promisify(parseString)
 
 interface ArxivResponse {
