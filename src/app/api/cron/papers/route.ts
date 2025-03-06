@@ -8,6 +8,7 @@ import { subDays, startOfDay, endOfDay } from 'date-fns'
 const parseXmlString = promisify(parseString)
 const prisma = new PrismaClient()
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function safeGetJournalRef(entry: any): string | null {
   try {
     const ref = entry['arxiv:journal_ref']
