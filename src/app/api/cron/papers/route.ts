@@ -79,7 +79,7 @@ export async function GET(req: Request) {
         pdfUrl: entry.id[0].replace('abs', 'pdf'),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         categories: entry.category.map((cat: any) => cat.$.term),
-        journalRef: entry['arxiv:journal_ref']?.[0] || null
+        journalRef: entry['arxiv:journal_ref']?.[0] || ""
       })
     }
 
