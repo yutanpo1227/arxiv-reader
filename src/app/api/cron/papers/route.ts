@@ -17,7 +17,6 @@ interface ArxivResponse {
       author: { name: string[] }[];
       published: string[];
       category: { $: { term: string } }[];
-      'arxiv:journal_ref'?: string[];
     }[]
   }
 }
@@ -82,22 +81,19 @@ export async function GET(req: Request) {
     }
 
     try {
-      // トランザクションを分割して実行
-      for (const paper of papersToCreate) {
-        try {
-          await prisma.paper.create({
+      // 一括トランザクションで実行
+      await prisma.$transaction(
+        papersToCreate.map(paper => 
+          prisma.paper.create({
             data: paper
-          });
-        } catch (e) {
-          console.error(`Error creating paper: ${paper.arxivId}`, e);
-          // 個別のエラーはスキップして続行
-        }
-      }
+          })
+        )
+      )
 
       return NextResponse.json({
         success: true,
         message: `Processed ${papersToCreate.length} papers`
-      });
+      })
     } catch (error) {
       console.error('Database transaction error:', error)
       return NextResponse.json({ 
