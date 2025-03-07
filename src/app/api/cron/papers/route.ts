@@ -80,48 +80,29 @@ export async function GET(req: Request) {
       })
     }
 
-    let responseObj;
-
     try {
-      const results = [];
-      
-      for (const paper of papersToCreate) {
-        try {
-          results.push(await prisma.paper.create({
+      // 一括トランザクションで実行
+      await prisma.$transaction(
+        papersToCreate.map(paper => 
+          prisma.paper.create({
             data: paper
-          }));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (e: any) {
-          if (e.code === 'P2002') {
-            console.log(`Paper already exists: ${paper.arxivId}`);
-          } else {
-            console.error(`Error creating paper: ${paper.arxivId}`, e);
-          }
-        }
-      }
+          })
+        )
+      )
 
-      responseObj = {
+      return NextResponse.json({
         success: true,
-        message: `Processed ${results.length} papers (${papersToCreate.length} total)`
-      };
+        message: `Processed ${papersToCreate.length} papers`
+      })
     } catch (error) {
       console.error('Database transaction error:', error)
-      responseObj = { 
+      return NextResponse.json({ 
         error: 'Database transaction failed',
         details: error instanceof Error ? error.message : 'Unknown error'
-      };
-    } finally {
-      await prisma.$disconnect();
+      }, { status: 500 })
     }
-
-    return NextResponse.json(responseObj, 
-      responseObj.error ? { status: 500 } : { status: 200 }
-    );
   } catch (error) {
     console.error('Error processing papers:', error)
-    
-    await prisma.$disconnect();
-    
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 } 
