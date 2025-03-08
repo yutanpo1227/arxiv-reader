@@ -26,7 +26,7 @@ export default function PaperFeed() {
       try {
         const data = await fetchPapers()
         const filteredPapers = data.filter(paper => {
-          if (!paper.isRead) return true;
+          if (paper.isRead) return false;
           
           const oneDayAgo = new Date();
           oneDayAgo.setDate(oneDayAgo.getDate() - 1);
