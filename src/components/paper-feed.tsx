@@ -13,7 +13,8 @@ import { Textarea } from "@/components/ui/textarea"
 type Tab = "home" | "favorites" | "search"
 
 export default function PaperFeed() {
-  const [papers, setPapers] = useState<Paper[]>([])
+  const [allPapers, setAllPapers] = useState<Paper[]>([])
+  const [homePapers, setHomePapers] = useState<Paper[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<Tab>("home")
@@ -21,11 +22,15 @@ export default function PaperFeed() {
   const [memo, setMemo] = useState("")
   const [favoriteActionFeedback, setFavoriteActionFeedback] = useState(false)
 
+  // 全ての論文を取得し、用途別に振り分ける
   useEffect(() => {
     const loadPapers = async () => {
       try {
         const data = await fetchPapers()
-        const filteredPapers = data.filter(paper => {
+        setAllPapers(data)
+        
+        // ホームタブ用：未読かつ最近追加された論文のみ
+        const filteredForHome = data.filter(paper => {
           if (paper.isRead) return false;
           
           const oneDayAgo = new Date();
@@ -33,7 +38,7 @@ export default function PaperFeed() {
           return new Date(paper.createdAt) > oneDayAgo;
         });
         
-        setPapers(filteredPapers)
+        setHomePapers(filteredForHome)
         setLoading(false)
       } catch (error) {
         console.error("論文の読み込みに失敗しました:", error)
@@ -44,19 +49,22 @@ export default function PaperFeed() {
     loadPapers()
   }, [])
 
+  // currentIndexに対応する論文の取得（アクティブなタブに応じて）
+  const currentPapers = activeTab === "home" ? homePapers : allPapers
+
   useEffect(() => {
-    if (papers.length > 0) {
-      setMemo(papers[currentIndex].memo || "")
+    if (currentPapers.length > 0) {
+      setMemo(currentPapers[currentIndex].memo || "")
     }
-  }, [currentIndex, papers])
+  }, [currentIndex, currentPapers])
 
   // 論文表示時に既読にマーク
   useEffect(() => {
-    if (papers.length > 0 && !papers[currentIndex].isRead) {
+    if (activeTab === "home" && homePapers.length > 0 && !homePapers[currentIndex].isRead) {
       const markCurrentPaperAsRead = async () => {
         try {
-          await markAsRead(papers[currentIndex].id);
-          updatePaper(papers[currentIndex].id, { isRead: true });
+          await markAsRead(homePapers[currentIndex].id);
+          updatePaper(homePapers[currentIndex].id, { isRead: true });
         } catch (error) {
           console.error("既読状態の更新に失敗しました:", error);
         }
@@ -64,17 +72,22 @@ export default function PaperFeed() {
       
       markCurrentPaperAsRead();
     }
-  }, [currentIndex, papers]);
+  }, [currentIndex, homePapers, activeTab]);
 
   const updatePaper = (paperId: string, updates: Partial<Paper>) => {
-    setPapers((currentPapers) =>
-      currentPapers.map((paper) => (paper.id === paperId ? { ...paper, ...updates } : paper)),
+    // 両方の配列を更新
+    setAllPapers((papers) =>
+      papers.map((paper) => (paper.id === paperId ? { ...paper, ...updates } : paper))
+    )
+    
+    setHomePapers((papers) =>
+      papers.map((paper) => (paper.id === paperId ? { ...paper, ...updates } : paper))
     )
   }
 
   const handleMemoSave = async () => {
     try {
-      const paper = papers[currentIndex]
+      const paper = currentPapers[currentIndex]
       await updateMemo(paper.id, memo)
       updatePaper(paper.id, { memo })
       setShowMemo(false)
@@ -85,7 +98,7 @@ export default function PaperFeed() {
 
   const handleFavoriteToggle = async () => {
     try {
-      const paper = papers[currentIndex]
+      const paper = currentPapers[currentIndex]
       const newState = !paper.favorite
       await toggleFavorite(paper.id, newState)
       updatePaper(paper.id, { favorite: newState })
@@ -104,7 +117,7 @@ export default function PaperFeed() {
   }
 
   const handleNextPaper = () => {
-    if (currentIndex < papers.length - 1) {
+    if (currentIndex < currentPapers.length - 1) {
       setCurrentIndex(currentIndex + 1)
     }
   }
@@ -117,7 +130,7 @@ export default function PaperFeed() {
     )
   }
 
-  if (papers.length === 0) {
+  if (currentPapers.length === 0) {
     return (
       <div className="w-full flex items-center justify-center min-h-screen bg-zinc-50 dark:bg-zinc-900">
         <p className="text-xl text-zinc-900 dark:text-zinc-100">論文が見つかりませんでした。</p>
@@ -146,12 +159,12 @@ export default function PaperFeed() {
                   transition={{ duration: 0.2 }}
                   className="absolute inset-0 flex items-center justify-center overflow-y-auto"
                 >
-                  {papers.length > 0 && (
+                  {currentPapers.length > 0 && (
                     <div className="flex relative w-full h-full items-center justify-center">
-                      <PaperCard paper={papers[currentIndex]} key={papers[currentIndex].id} />
+                      <PaperCard paper={currentPapers[currentIndex]} key={currentPapers[currentIndex].id} />
                       {/* 進行状況インジケーター */}
                       <div className="fixed top-6 right-6 px-3 py-1.5 rounded-lg bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-sm font-medium text-zinc-600 dark:text-zinc-300 opacity-80">
-                        {currentIndex + 1} / {papers.length}
+                        {currentIndex + 1} / {currentPapers.length}
                       </div>
                     </div>
                   )}
@@ -168,7 +181,10 @@ export default function PaperFeed() {
               exit={{ opacity: 0 }}
               className="absolute inset-0 overflow-y-auto"
             >
-              <FavoritesList papers={papers.filter((paper) => paper.favorite)} onUpdatePaper={updatePaper} />
+              <FavoritesList 
+                papers={allPapers.filter((paper) => paper.favorite)} 
+                onUpdatePaper={updatePaper} 
+              />
             </motion.div>
           )}
 
@@ -206,7 +222,7 @@ export default function PaperFeed() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setMemo(papers[currentIndex].memo || "")
+                  setMemo(currentPapers[currentIndex].memo || "")
                   setShowMemo(false)
                 }}
               >
@@ -222,7 +238,7 @@ export default function PaperFeed() {
         </div>
       )}
 
-      {activeTab === "home" && papers.length > 0 && (
+      {activeTab === "home" && currentPapers.length > 0 && (
         <>
           <div className="fixed bottom-20 left-1/2 -translate-x-1/2 flex items-center gap-3 z-40">
             <button
@@ -231,7 +247,7 @@ export default function PaperFeed() {
             >
               <Heart
                 className={`w-5 h-5 ${
-                  papers[currentIndex].favorite ? "fill-rose-500 text-rose-500" : "text-zinc-600 dark:text-zinc-400"
+                  currentPapers[currentIndex].favorite ? "fill-rose-500 text-rose-500" : "text-zinc-600 dark:text-zinc-400"
                 }`}
               />
             </button>
@@ -244,7 +260,7 @@ export default function PaperFeed() {
             </button>
 
             <a
-              href={papers[currentIndex].pdfUrl}
+              href={currentPapers[currentIndex].pdfUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="w-12 h-12 flex items-center justify-center bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
@@ -265,7 +281,7 @@ export default function PaperFeed() {
             </button>
             <button
               onClick={handleNextPaper}
-              disabled={currentIndex === papers.length - 1}
+              disabled={currentIndex === currentPapers.length - 1}
               className="w-12 h-12 flex items-center justify-center bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 shadow-lg hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="次の論文"
             >
@@ -314,7 +330,7 @@ export default function PaperFeed() {
           exit={{ opacity: 0 }}
           className="fixed top-6 left-1/2 transform -translate-x-1/2 bg-zinc-100 dark:bg-zinc-800 shadow-lg backdrop-blur-sm px-4 py-2 rounded-lg z-50 text-sm font-medium"
         >
-          {papers[currentIndex].favorite ? "お気に入りに追加しました" : "お気に入りから削除しました"}
+          {currentPapers[currentIndex].favorite ? "お気に入りに追加しました" : "お気に入りから削除しました"}
         </motion.div>
       )}
     </div>
