@@ -81,18 +81,23 @@ export async function GET(req: Request) {
     }
 
     try {
-      // 一括トランザクションで実行
-      await prisma.$transaction(
+      // upsertでトランザクションを実行
+      const results = await prisma.$transaction(
         papersToCreate.map(paper => 
-          prisma.paper.create({
-            data: paper
+          prisma.paper.upsert({
+            where: { arxivId: paper.arxivId },
+            update: {}, // 既存のデータは更新しない
+            create: paper
           })
         )
       )
 
+      const createdCount = results.filter(r => r.createdAt === r.updatedAt).length;
+      const existingCount = results.length - createdCount;
+
       return NextResponse.json({
         success: true,
-        message: `Processed ${papersToCreate.length} papers`
+        message: `Processed ${papersToCreate.length} papers (新規: ${createdCount}, 既存: ${existingCount})`
       })
     } catch (error) {
       console.error('Database transaction error:', error)
