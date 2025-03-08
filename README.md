@@ -15,7 +15,7 @@
 
 - **フロントエンド**: Next.js, React, TypeScript, Tailwind CSS
 - **バックエンド**: Next.js API Routes
-- **データベース**: PostgreSQL, Prisma ORM
+- **データベース**: Supabase, PostgreSQL, Prisma ORM
 - **認証**: Next-Auth v5 (Auth.js)
 - **デプロイ**: Vercel
 
@@ -24,7 +24,7 @@
 ### 前提条件
 
 - Node.js 18.x以上
-- PostgreSQL
+- Docker Desktop
 - npm または yarn
 
 ### インストール手順
@@ -42,11 +42,20 @@
    yarn install
    ```
 
-3. 環境変数の設定
+3. Supabaseローカル開発環境のセットアップ
+   ```bash
+   # Supabaseローカル開発環境を起動
+   npx supabase start
+   ```
+
+4. 環境変数の設定
    `.env`ファイルを作成し、必要な環境変数を設定します：
    ```
+   # データベース接続情報
    DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
    DIRECT_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+   
+   # 認証情報
    CRON_SECRET="your-secret-key"
    AUTH_SECRET="your-auth-secret"
    AUTH_GOOGLE_ID=your-google-client-id
@@ -54,27 +63,72 @@
    MY_EMAIL=your-email@example.com
    AUTH_URL=http://localhost:3000
    VERCEL_URL=http://localhost:3000
+   
+   # 翻訳API
    TRANSLATE_API_URL=your-translation-api-url
    ```
 
-4. データベースのセットアップ
+5. データベースのセットアップ
    ```bash
    npx prisma migrate dev
    ```
 
-5. 開発サーバーの起動
+6. 開発サーバーの起動
    ```bash
    npm run dev
    # または
    yarn dev
    ```
 
-6. ブラウザで `http://localhost:3000` にアクセス
+7. ブラウザで `http://localhost:3000` にアクセス
 
-## データ取得の設定
+## データ取得と翻訳の設定
+
+### 論文データの取得
 
 論文データは定期的にCronジョブで取得されます。ローカル環境では以下のコマンドで手動実行できます：
 ```bash
 curl -X GET http://localhost:3000/api/cron/papers -H "Authorization: Bearer your-cron-secret"
 ```
 
+本番環境では、Vercel Cronを使用して自動実行しています。
+
+### 翻訳システムの設定
+
+翻訳はSupabaseのデータベースWebhookを活用して実装しています：
+
+1. 新しい論文がデータベースに挿入される
+2. SupabaseのWebhookが自動的に発火
+3. Webhookが`/api/translate`エンドポイントを呼び出す
+4. 翻訳APIを使用してタイトルと要約を日本語に翻訳
+5. 翻訳結果をデータベースに保存
+
+本番環境のSupabase設定:
+
+- Webhookトリガー: `INSERT ON papers`
+- 対象URL: `https://your-app-url.com/api/translate`
+
+## Supabaseローカル開発環境
+
+このプロジェクトではSupabaseのローカル開発環境を使用しています。基本的な管理手順は以下の通りです：
+
+### コンテナの起動
+```bash
+npx supabase start
+```
+
+### コンテナの停止
+```bash
+npx supabase stop
+```
+
+### データベース接続情報の確認
+```bash
+npx supabase status
+```
+
+### ダッシュボードへのアクセス
+ローカルSupabaseダッシュボードは通常、以下のURLでアクセスできます：
+```
+http://localhost:54323
+```
