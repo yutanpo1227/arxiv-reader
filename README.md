@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# arXiv Reader
 
-## Getting Started
+最新の研究論文を日本語で読むためのウェブアプリケーション。arXiv APIから取得した論文を日本語に翻訳し、管理できます。
 
-First, run the development server:
+## 機能
 
+- arXiv APIからの最新論文の自動取得
+- 論文の日本語翻訳
+- お気に入り機能
+- メモ機能
+- 既読管理
+- Googleアカウントによるログイン認証
+
+## 技術スタック
+
+- **フロントエンド**: Next.js, React, TypeScript, Tailwind CSS
+- **バックエンド**: Next.js API Routes
+- **データベース**: PostgreSQL, Prisma ORM
+- **認証**: Next-Auth v5 (Auth.js)
+- **デプロイ**: Vercel
+
+## 開発環境のセットアップ
+
+### 前提条件
+
+- Node.js 18.x以上
+- PostgreSQL
+- npm または yarn
+
+### インストール手順
+
+1. リポジトリをクローン
+   ```bash
+   git clone https://github.com/yourusername/arxiv-reader.git
+   cd arxiv-reader
+   ```
+
+2. 依存関係のインストール
+   ```bash
+   npm install
+   # または
+   yarn install
+   ```
+
+3. 環境変数の設定
+   `.env`ファイルを作成し、必要な環境変数を設定します：
+   ```
+   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+   DIRECT_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+   CRON_SECRET="your-secret-key"
+   AUTH_SECRET="your-auth-secret"
+   AUTH_GOOGLE_ID=your-google-client-id
+   AUTH_GOOGLE_SECRET=your-google-client-secret
+   MY_EMAIL=your-email@example.com
+   AUTH_URL=http://localhost:3000
+   VERCEL_URL=http://localhost:3000
+   TRANSLATE_API_URL=your-translation-api-url
+   ```
+
+4. データベースのセットアップ
+   ```bash
+   npx prisma migrate dev
+   ```
+
+5. 開発サーバーの起動
+   ```bash
+   npm run dev
+   # または
+   yarn dev
+   ```
+
+6. ブラウザで `http://localhost:3000` にアクセス
+
+## データ取得の設定
+
+論文データは定期的にCronジョブで取得されます。ローカル環境では以下のコマンドで手動実行できます：
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+curl -X GET http://localhost:3000/api/cron/papers -H "Authorization: Bearer your-cron-secret"
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
