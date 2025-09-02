@@ -52,20 +52,20 @@
    `.env`ファイルを作成し、必要な環境変数を設定します：
    ```
    # データベース接続情報
-   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
-   DIRECT_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres  # Prismaのメインデータベース接続URL
+   DIRECT_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres    # Prismaのダイレクト接続URL（マイグレーション用）
    
    # 認証情報
-   CRON_SECRET="your-secret-key"
-   AUTH_SECRET="your-auth-secret"
-   AUTH_GOOGLE_ID=your-google-client-id
-   AUTH_GOOGLE_SECRET=your-google-client-secret
-   MY_EMAIL=your-email@example.com
-   AUTH_URL=http://localhost:3000
-   VERCEL_URL=http://localhost:3000
+   CRON_SECRET="your-secret-key"              # Cronジョブの認証用秘密キー
+   AUTH_SECRET="your-auth-secret"             # NextAuth.jsの暗号化キー（ランダム文字列）
+   AUTH_GOOGLE_ID=your-google-client-id       # Google OAuth クライアントID
+   AUTH_GOOGLE_SECRET=your-google-client-secret # Google OAuth クライアントシークレット
+   MY_EMAIL=your-email@example.com            # 管理者のメールアドレス
+   AUTH_URL=http://localhost:3000             # 認証のベースURL（本番環境では実際のドメイン）
+   VERCEL_URL=http://localhost:3000           # Vercel デプロイ時のURL（ローカルでは localhost）
    
    # 翻訳API
-   TRANSLATE_API_URL=your-translation-api-url
+   DEEPL_AUTH_KEY=your-deepl-auth-key # DeepL APIキー
    ```
 
 5. データベースのセットアップ
@@ -100,7 +100,7 @@ curl -X GET http://localhost:3000/api/cron/papers -H "Authorization: Bearer your
 1. 新しい論文がデータベースに挿入される
 2. SupabaseのWebhookが自動的に発火
 3. Webhookが`/api/translate`エンドポイントを呼び出す
-4. 翻訳APIを使用してタイトルと要約を日本語に翻訳
+4. DeepL APIを使用してタイトルと要約を日本語に翻訳
 5. 翻訳結果をデータベースに保存
 
 本番環境のSupabase設定:
